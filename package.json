@@ -1,5 +1,5 @@
 {
-  "name": "platform",
+  "name": "@nfa/platform",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,6 +10,7 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@nfa/database": "workspace:*",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"
