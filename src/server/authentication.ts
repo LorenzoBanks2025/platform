@@ -121,6 +121,29 @@ function validateName(value: unknown, label: string): string {
   return name;
 }
 
+function validateAvatarUrl(value: unknown): string | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value !== "string" || value.length > 2048) {
+    throw new AuthenticationError("Avatar URL must be a valid HTTPS URL.", 400);
+  }
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new AuthenticationError("Avatar URL must be a valid HTTPS URL.", 400);
+  }
+
+  if (url.protocol !== "https:" || url.username || url.password) {
+    throw new AuthenticationError("Avatar URL must be a valid HTTPS URL.", 400);
+  }
+
+  return url.href;
+}
+
 function isUniqueConstraintError(error: unknown): boolean {
   return (
     error instanceof Error &&
@@ -155,6 +178,7 @@ export class AuthenticationService {
     const firstName = validateName(body.firstName, "First name");
     const lastName = validateName(body.lastName, "Last name");
     const email = normalizeEmail(body.email);
+    const avatarUrl = validateAvatarUrl(body.avatarUrl);
     validatePassword(body.password);
 
     if (this.users.findByEmail(email)) {
@@ -171,7 +195,12 @@ export class AuthenticationService {
     try {
       const createAccountAndSession = this.connection.db.$client.transaction(
         () => {
-          const user = this.users.create({ firstName, lastName, email });
+          const user = this.users.create({
+            firstName,
+            lastName,
+            email,
+            avatarUrl,
+          });
           this.authentication.createCredential(user.id, passwordHash);
           this.authentication.createSession({
             tokenHash: hashToken(token),
@@ -251,6 +280,16 @@ export class AuthenticationService {
     }
 
     return this.users.findById(session.userId);
+  }
+
+  updateAvatar(userId: string, value: unknown): User {
+    const avatarUrl = validateAvatarUrl(value);
+    const user = this.users.update(userId, { avatarUrl });
+    if (!user) {
+      throw new AuthenticationError("User account was not found.", 404);
+    }
+
+    return user;
   }
 
   logout(token: string | undefined): void {

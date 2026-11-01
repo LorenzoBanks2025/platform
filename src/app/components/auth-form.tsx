@@ -38,6 +38,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
+      window.dispatchEvent(new Event("nfa-auth-changed"));
       router.push("/");
       router.refresh();
     } catch {
@@ -72,6 +73,24 @@ export function AuthForm({ mode }: AuthFormProps) {
             />
           </label>
         </div>
+      )}
+      {isRegister && (
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+          Avatar image URL{" "}
+          <span className="font-normal text-zinc-500">(optional)</span>
+          <input
+            autoComplete="url"
+            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-950 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:focus:ring-zinc-700"
+            maxLength={2048}
+            name="avatarUrl"
+            placeholder="https://example.com/avatar.png"
+            type="url"
+          />
+          <span className="font-normal text-zinc-500">
+            Use an HTTPS image URL. You can add or change it later on your
+            profile.
+          </span>
+        </label>
       )}
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-200">
         Email

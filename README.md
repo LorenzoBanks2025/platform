@@ -27,6 +27,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - `src/app/components/` contains UI components used by pages.
 - `src/app/components/site-navigation.tsx` provides shared links between app routes.
 - The `/login` and `/register` routes render the authentication forms.
+- Registration accepts an optional HTTPS `avatarUrl`; signed-in users can change it on `/profile`.
+- The signed-in navigation menu links to the profile and can revoke the current session to sign out.
 - Keep Next.js route entry files such as `page.tsx`, `layout.tsx`, and API `route.ts` files in their route directories.
 
 ## Authentication API
@@ -35,6 +37,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - `POST /api/auth/login` accepts `email` and `password`.
 - `POST /api/auth/logout` revokes the current session.
 - `GET /api/auth/me` returns the current user or `401` when signed out.
+- `PATCH /api/auth/profile` updates the signed-in user's `avatarUrl` (send `null` to remove it).
 
 Successful registration and login set an HttpOnly, SameSite=Lax session cookie.
 Passwords must contain at least 12 characters. Sessions expire after seven days;
