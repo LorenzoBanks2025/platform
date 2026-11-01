@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
-import type { DatabaseConnection, User } from "@nfa/database";
-import { AuthenticationModel, UserModel } from "@nfa/database";
+import type { DatabaseConnection, User, UserRole } from "@nfa/database";
+import { AuthenticationModel, UserGroupModel, UserModel } from "@nfa/database";
 
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 const PASSWORD_HASH_LENGTH = 64;
@@ -21,8 +21,10 @@ export class AuthenticationError extends Error {
 export type AuthenticationSession = {
   token: string;
   expiresAt: Date;
-  user: User;
+  user: AuthenticatedUser;
 };
+
+export type AuthenticatedUser = User & { role: UserRole };
 
 function derivePassword(password: string, salt: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -162,11 +164,22 @@ function isValidToken(token: string): boolean {
 
 export class AuthenticationService {
   private readonly users: UserModel;
+  private readonly userGroups: UserGroupModel;
   private readonly authentication: AuthenticationModel;
 
   constructor(private readonly connection: DatabaseConnection) {
     this.users = new UserModel(connection);
+    this.userGroups = new UserGroupModel(connection);
     this.authentication = new AuthenticationModel(connection);
+  }
+
+  private addUserRole(user: User): AuthenticatedUser {
+    const role = this.userGroups.findRoleByUserId(user.id);
+    if (!role) {
+      throw new Error("User role assignment is missing.");
+    }
+
+    return { ...user, role };
   }
 
   async register(input: unknown): Promise<AuthenticationSession> {
@@ -193,25 +206,26 @@ export class AuthenticationService {
     const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
     try {
-      const createAccountAndSession = this.connection.db.$client.transaction(
-        () => {
+      const user = this.connection.db.$client
+        .transaction(() => {
+          const isFirstAccount = this.users.count() === 0;
           const user = this.users.create({
             firstName,
             lastName,
             email,
             avatarUrl,
           });
+          this.userGroups.setRole(user.id, isFirstAccount ? "admin" : "user");
           this.authentication.createCredential(user.id, passwordHash);
           this.authentication.createSession({
             tokenHash: hashToken(token),
             userId: user.id,
             expiresAt,
           });
-          return user;
-        },
-      );
+          return this.addUserRole(user);
+        })
+        .immediate();
 
-      const user = createAccountAndSession();
       this.authentication.deleteExpiredSessions();
       return { user, token, expiresAt };
     } catch (error) {
@@ -260,10 +274,10 @@ export class AuthenticationService {
       expiresAt,
     });
 
-    return { user, token, expiresAt };
+    return { user: this.addUserRole(user), token, expiresAt };
   }
 
-  authenticate(token: string | undefined): User | undefined {
+  authenticate(token: string | undefined): AuthenticatedUser | undefined {
     if (!token || !isValidToken(token)) {
       return undefined;
     }
@@ -279,7 +293,8 @@ export class AuthenticationService {
       return undefined;
     }
 
-    return this.users.findById(session.userId);
+    const user = this.users.findById(session.userId);
+    return user ? this.addUserRole(user) : undefined;
   }
 
   updateAvatar(userId: string, value: unknown): User {

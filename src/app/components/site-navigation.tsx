@@ -11,6 +11,8 @@ type CurrentUser = {
   lastName: string;
   email: string;
   avatarUrl: string | null;
+  gravatarUrl: string;
+  role: "admin" | "user";
 };
 
 type CurrentUserResponse = {
@@ -89,43 +91,52 @@ export function SiteNavigation() {
           NFA Platform
         </Link>
         <div className="flex items-center gap-2">
-          <Link className={linkClassName} href="/">
-            Home
-          </Link>
           {user ? (
-            <details className="relative" ref={menuRef}>
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500 dark:text-zinc-100 dark:hover:bg-zinc-800">
-                <UserAvatar name={displayName} avatarUrl={user.avatarUrl} />
-                <span>{displayName}</span>
-                <span aria-hidden="true" className="text-xs">
-                  ▾
-                </span>
-              </summary>
-              <div className="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                <p className="truncate px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">
-                  {user.email}
-                </p>
-                <Link
-                  className="block rounded-md px-3 py-2 text-sm text-zinc-800 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
-                  href="/profile"
-                  onClick={() => menuRef.current?.removeAttribute("open")}
-                >
-                  Profile
-                </Link>
-                <button
-                  className="block w-full rounded-md px-3 py-2 text-left text-sm text-zinc-800 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
-                  onClick={handleLogout}
-                  type="button"
-                >
-                  Sign out
-                </button>
-                {logoutError && (
-                  <p className="px-3 py-2 text-xs text-red-700" role="alert">
-                    {logoutError}
+            <>
+              <Link className={linkClassName} href="/">
+                Dashboard
+              </Link>
+              <details className="relative" ref={menuRef}>
+                <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500 dark:text-zinc-100 dark:hover:bg-zinc-800">
+                  <UserAvatar
+                    name={displayName}
+                    avatarUrl={user.avatarUrl}
+                    gravatarUrl={user.gravatarUrl}
+                  />
+                  <span>{displayName}</span>
+                  <span aria-hidden="true" className="text-xs">
+                    ▾
+                  </span>
+                </summary>
+                <div className="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                  <p className="truncate px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    {user.email}
                   </p>
-                )}
-              </div>
-            </details>
+                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    {user.role === "admin" ? "Administrator" : "Standard user"}
+                  </p>
+                  <Link
+                    className="block rounded-md px-3 py-2 text-sm text-zinc-800 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                    href="/profile"
+                    onClick={() => menuRef.current?.removeAttribute("open")}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm text-zinc-800 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                    onClick={handleLogout}
+                    type="button"
+                  >
+                    Sign out
+                  </button>
+                  {logoutError && (
+                    <p className="px-3 py-2 text-xs text-red-700" role="alert">
+                      {logoutError}
+                    </p>
+                  )}
+                </div>
+              </details>
+            </>
           ) : (
             <>
               <Link className={linkClassName} href="/login">

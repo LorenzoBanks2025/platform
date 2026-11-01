@@ -1,6 +1,7 @@
 import { AuthenticationService } from "@/server/authentication";
 import { readAuthenticationCookie } from "@/server/authenticationCookies";
 import { getDatabaseConnection } from "@/server/database";
+import { getGravatarUrl } from "@/server/gravatar";
 import { authenticationJson } from "../route-utils";
 
 export async function GET(): Promise<Response> {
@@ -14,5 +15,7 @@ export async function GET(): Promise<Response> {
     );
   }
 
-  return authenticationJson({ user });
+  return authenticationJson({
+    user: { ...user, gravatarUrl: getGravatarUrl(user.email) },
+  });
 }

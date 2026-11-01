@@ -1,9 +1,9 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { AUTH_SESSION_COOKIE } from "../authentication-constants";
 import type { AuthenticationSession } from "./authentication";
 
-export const AUTH_SESSION_COOKIE =
-  process.env.NODE_ENV === "production" ? "__Host-nfa_session" : "nfa_session";
+export { AUTH_SESSION_COOKIE };
 
 const cookieOptions = {
   httpOnly: true,

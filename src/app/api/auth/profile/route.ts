@@ -4,6 +4,7 @@ import {
 } from "@/server/authentication";
 import { readAuthenticationCookie } from "@/server/authenticationCookies";
 import { getDatabaseConnection } from "@/server/database";
+import { getGravatarUrl } from "@/server/gravatar";
 import {
   authenticationJson,
   handleAuthenticationRequest,
@@ -40,6 +41,12 @@ export async function PATCH(request: Request): Promise<Response> {
     const profile = body as Record<string, unknown>;
     const updatedUser = authentication.updateAvatar(user.id, profile.avatarUrl);
 
-    return authenticationJson({ user: updatedUser });
+    return authenticationJson({
+      user: {
+        ...updatedUser,
+        role: user.role,
+        gravatarUrl: getGravatarUrl(updatedUser.email),
+      },
+    });
   });
 }

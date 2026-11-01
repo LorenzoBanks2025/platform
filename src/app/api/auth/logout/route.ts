@@ -12,7 +12,15 @@ import {
 export async function POST(): Promise<Response> {
   return handleAuthenticationRequest(async () => {
     const authentication = new AuthenticationService(getDatabaseConnection());
-    authentication.logout(await readAuthenticationCookie());
+    const token = await readAuthenticationCookie();
+    if (!authentication.authenticate(token)) {
+      return authenticationJson(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
+    authentication.logout(token);
     await clearAuthenticationCookie();
     return authenticationJson({ status: "ok" });
   });

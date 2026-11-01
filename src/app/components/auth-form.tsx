@@ -76,7 +76,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       )}
       {isRegister && (
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-          Avatar image URL{" "}
+          Custom avatar image URL{" "}
           <span className="font-normal text-zinc-500">(optional)</span>
           <input
             autoComplete="url"
@@ -87,8 +87,8 @@ export function AuthForm({ mode }: AuthFormProps) {
             type="url"
           />
           <span className="font-normal text-zinc-500">
-            Use an HTTPS image URL. You can add or change it later on your
-            profile.
+            Use an HTTPS image URL. This takes precedence over Gravatar and can
+            be changed later on your profile.
           </span>
         </label>
       )}

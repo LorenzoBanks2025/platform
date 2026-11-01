@@ -22,13 +22,21 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## App structure
 
-- `src/app/page.tsx` defines the `/` route and renders its page from `src/app/pages/`.
+- `src/app/(protected)/page.tsx` defines the protected dashboard at `/` and renders its page from `src/app/pages/`.
+- `src/app/(protected)/` contains protected routes; the route group does not change their URLs. Each route verifies the signed-in user before rendering.
+- The dashboard is shared by all signed-in users; administrator-only dashboard options are shown according to the authenticated role.
+- Use `requireAdministrator()` for future pages that should be available only to administrators. Role-specific features on shared pages must also be authorized on the server.
+- `src/proxy.ts` redirects requests without a session cookie to `/login` as a fast check. Protected route entries verify the session against the database before rendering.
 - `src/app/pages/` contains route page components.
 - `src/app/components/` contains UI components used by pages.
 - `src/app/components/site-navigation.tsx` provides shared links between app routes.
 - The `/login` and `/register` routes render the authentication forms.
-- Registration accepts an optional HTTPS `avatarUrl`; signed-in users can change it on `/profile`.
+- Login and registration pages and their corresponding API endpoints are public. The health endpoint is also public for service monitoring.
+- Other API endpoints validate the session themselves and return `401` when the caller is signed out.
+- Registration accepts an optional HTTPS `avatarUrl`; it takes precedence over a matching Gravatar. Signed-in users can choose an available Gravatar or change their custom URL on `/profile`.
+- Gravatar lookup is available only to the signed-in user and checks the account's normalized email with Gravatar. Avatar images are loaded directly from their HTTPS source, with initials shown if an image cannot load.
 - The signed-in navigation menu links to the profile and can revoke the current session to sign out.
+- The first account registered in an empty database is assigned the administrator role; later registrations receive the standard user role.
 - Keep Next.js route entry files such as `page.tsx`, `layout.tsx`, and API `route.ts` files in their route directories.
 
 ## Authentication API
@@ -41,8 +49,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 Successful registration and login set an HttpOnly, SameSite=Lax session cookie.
 Passwords must contain at least 12 characters. Sessions expire after seven days;
-the database stores only a hash of each opaque session token. Public registration
-creates regular user accounts, not administrators.
+the database stores only a hash of each opaque session token. The first registered
+account is an administrator; subsequent accounts are standard users.
 
 ## Learn More
 
